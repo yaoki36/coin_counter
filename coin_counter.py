@@ -14,7 +14,6 @@ while(True):
     if not ret: continue
     h,w,c=frame.shape
     gray=cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-    dst = copy.copy(gray)
     
     th1, th2 = 100, 170
     gray[gray <= th1] = 0
@@ -24,15 +23,12 @@ while(True):
     kernel = np.ones((3,3),np.uint8)
     closing = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel)
     opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel)
+    
     # ラベリング処理
     label = cv2.connectedComponentsWithStats(opening)
     
     # ラベリング結果書き出し用に二値画像をカラー変換
     color_src01 = cv2.cvtColor(opening, cv2.COLOR_GRAY2BGR)
-    color_src02 = cv2.cvtColor(opening, cv2.COLOR_GRAY2BGR)
-    
-    # ラベリング処理
-    label = cv2.connectedComponentsWithStats(opening)
     
     # オブジェクト情報を項目別に抽出
     n = label[0] - 1
@@ -64,8 +60,6 @@ while(True):
         ave[0], ave[1] = ave[1], ave[0]
     
     #コイン判別に利用する変数の初期化
-    medium_coin = 0
-    smal_coin = 0
     five_hundred = 0
     one_hundred = 0
     fifty = 0
@@ -82,30 +76,23 @@ while(True):
         x1 = data[i][0] + data[i][2]
         y1 = data[i][1] + data[i][3]
         cv2.rectangle(frame, (x0, y0), (x1, y1), (0, 0, 255))
-        cv2.rectangle(color_src01, (x0, y0), (x1, y1), (0, 0, 255))
-        cv2.rectangle(color_src02, (x0, y0), (x1, y1), (0, 0, 255))
-        
-        # 各オブジェクトのラベル番号と面積を表示
-        cv2.putText(color_src01, str(i+1), (x1 - 20, y1 + 15), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 255))
-        cv2.putText(color_src01, "S: " +str(data[i][4]), (x1 - 20, y1 + 30), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 255))
-        
         
         #コインの判別
         if data[i][4] > ave[0]:
             five_hundred += 1
             cv2.putText(frame, "500", (x1 - 20, y1 + 15), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 255))
         elif data[i][4] < ave[1]:
-            if (color_src02[center[i][1]][center[i][0]]).any() == 0:
+            if (color_src01[center[i][1]][center[i][0]]).any() == 0:
                 fifty += 1
                 cv2.putText(frame, "50", (x1 - 20, y1 + 15), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 255))
             else:
                 one += 1
                 cv2.putText(frame, "1", (x1 - 20, y1 + 15), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 255))
         else:
-            if (color_src02[center[i][1]][center[i][0]] == 255).all():
+            if (color_src01[center[i][1]][center[i][0]] == 255).all():
                 one_hundred += 1
                 cv2.putText(frame, "100", (x1 - 20, y1 + 15), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 255))
-            elif (color_src02[center[i][1]][center[i][0]]).any() == 0:
+            elif (color_src01[center[i][1]][center[i][0]]).any() == 0:
                 five += 1
                 cv2.putText(frame, "5", (x1 - 20, y1 + 15), cv2.FONT_HERSHEY_PLAIN, 1, (0, 255, 255))
             else:
